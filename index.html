@@ -1,1185 +1,1633 @@
-import React, { useState, useEffect } from 'react';
-
-const App = () => {
-  // Mock data with monthly grades
-  const [students, setStudents] = useState([
-    {
-      id: 'STU001',
-      name: 'Ahmed Mohamed',
-      grade: 'KG1',
-      monthlyGrades: {
-        September: [
-          { name: 'Arabic', score: 92 },
-          { name: 'English', score: 88 },
-          { name: 'Math', score: 95 },
-          { name: 'Art', score: 97 },
-          { name: 'Music', score: 90 }
-        ],
-        October: [
-          { name: 'Arabic', score: 94 },
-          { name: 'English', score: 90 },
-          { name: 'Math', score: 96 },
-          { name: 'Art', score: 95 },
-          { name: 'Music', score: 92 }
-        ],
-        November: [
-          { name: 'Arabic', score: 90 },
-          { name: 'English', score: 87 },
-          { name: 'Math', score: 93 },
-          { name: 'Art', score: 96 },
-          { name: 'Music', score: 89 }
-        ]
-      }
-    },
-    {
-      id: 'STU002',
-      name: 'Fatima Ali',
-      grade: 'Grade 3',
-      monthlyGrades: {
-        September: [
-          { name: 'Arabic', score: 87 },
-          { name: 'English', score: 91 },
-          { name: 'Math', score: 85 },
-          { name: 'Science', score: 89 },
-          { name: 'Social Studies', score: 93 }
-        ],
-        October: [
-          { name: 'Arabic', score: 89 },
-          { name: 'English', score: 93 },
-          { name: 'Math', score: 88 },
-          { name: 'Science', score: 91 },
-          { name: 'Social Studies', score: 95 }
-        ]
-      }
-    },
-    {
-      id: 'STU003',
-      name: 'Omar Hassan',
-      grade: 'Prep 2',
-      monthlyGrades: {
-        September: [
-          { name: 'Arabic', score: 78 },
-          { name: 'English', score: 82 },
-          { name: 'Math', score: 88 },
-          { name: 'Science', score: 85 },
-          { name: 'History', score: 80 },
-          { name: 'Geography', score: 83 }
-        ]
-      }
-    },
-    {
-      id: 'STU004',
-      name: 'Layla Ibrahim',
-      grade: 'Grade 6',
-      monthlyGrades: {
-        September: [
-          { name: 'Arabic', score: 94 },
-          { name: 'English', score: 89 },
-          { name: 'Math', score: 92 },
-          { name: 'Science', score: 87 },
-          { name: 'Computer Science', score: 95 },
-          { name: 'Physical Education', score: 91 }
-        ]
-      }
-    },
-    {
-      id: 'STU005',
-      name: 'Youssef Mahmoud',
-      grade: 'KG2',
-      monthlyGrades: {
-        September: [
-          { name: 'Arabic', score: 90 },
-          { name: 'English', score: 85 },
-          { name: 'Math Basics', score: 93 },
-          { name: 'Art', score: 96 },
-          { name: 'Music', score: 88 }
-        ],
-        October: [
-          { name: 'Arabic', score: 92 },
-          { name: 'English', score: 88 },
-          { name: 'Math Basics', score: 95 },
-          { name: 'Art', score: 97 },
-          { name: 'Music', score: 91 }
-        ],
-        November: [
-          { name: 'Arabic', score: 89 },
-          { name: 'English', score: 86 },
-          { name: 'Math Basics', score: 94 },
-          { name: 'Art', score: 95 },
-          { name: 'Music', score: 90 }
-        ],
-        December: [
-          { name: 'Arabic', score: 93 },
-          { name: 'English', score: 89 },
-          { name: 'Math Basics', score: 96 },
-          { name: 'Art', score: 98 },
-          { name: 'Music', score: 92 }
-        ]
-      }
-    }
-  ]);
-
-  const [currentView, setCurrentView] = useState('parent');
-  const [currentStudent, setCurrentStudent] = useState(null);
-  const [currentMonth, setCurrentMonth] = useState('September');
-  const [currentSubjects, setCurrentSubjects] = useState([]);
-  const [nextStudentNumber, setNextStudentNumber] = useState(6);
-  const [idPrefix, setIdPrefix] = useState('STU');
-  const [currentIdNumber, setCurrentIdNumber] = useState(1);
-  const [loginCredentials, setLoginCredentials] = useState({
-    username: '',
-    password: ''
-  });
-  const [showLogin, setShowLogin] = useState(false);
-  const [loginError, setLoginError] = useState('');
-  const [authenticated, setAuthenticated] = useState(false);
-
-  const months = ['September', 'October', 'November', 'December', 'January', 'February', 'March', 'April', 'May', 'June'];
-  const validSchoolIds = ['kha22', 'Do23'];
-
-  // Add school logo to the component
-  const SchoolLogo = () => (
-    <div className="flex items-center gap-2">
-      <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-        <svg viewBox="0 0 24 24" fill="white" className="w-8 h-8">
-          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-          <path d="M12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-          <path d="M12 11c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-        </svg>
-      </div>
-      <div>
-        <div className="text-xl font-bold text-gray-800">LEADERS</div>
-        <div className="text-sm text-gray-600">LANGUAGE SCHOOL</div>
-      </div>
-    </div>
-  );
-
-  // Handle login authentication
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (validSchoolIds.includes(loginCredentials.username.toLowerCase()) && loginCredentials.password === 'password') {
-      setAuthenticated(true);
-      setShowLogin(false);
-      setLoginError('');
-    } else {
-      setLoginError('Invalid credentials. Please try again.');
-    }
-  };
-
-  // Generate Student ID
-  const generateStudentId = (prefix = 'STU', number = null) => {
-    if (number === null) {
-      number = nextStudentNumber++;
-    }
-    return `${prefix}${number.toString().padStart(3, '0')}`;
-  };
-
-  // Render month selector for Parent Portal
-  const renderParentMonthSelector = (student) => {
-    return (
-      <div className="month-selector" id="parent-month-selector">
-        {months.map(month => {
-          const hasData = student.monthlyGrades && student.monthlyGrades[month] && student.monthlyGrades[month].length > 0;
-          return (
-            <button
-              key={month}
-              onClick={() => setCurrentMonth(month)}
-              className={`month-btn ${hasData ? 'has-data' : 'no-data'} ${currentMonth === month ? 'active' : ''}`}
-            >
-              {month}
-            </button>
-          );
-        })}
-      </div>
-    );
-  };
-
-  // Display monthly grades
-  const displayMonthlyGrades = (student, month) => {
-    const monthlyGrades = student.monthlyGrades && student.monthlyGrades[month] ? student.monthlyGrades[month] : [];
-    const average = monthlyGrades.length > 0 ? Math.round(monthlyGrades.reduce((sum, subject) => sum + subject.score, 0) / monthlyGrades.length) : 0;
-    
-    return (
-      <div className="monthly-grades-container">
-        {monthlyGrades.length === 0 ? (
-          <div className="alert alert-danger">
-            No grades recorded for {month} yet.
-          </div>
-        ) : (
-          <>
-            <div className="student-header" style={{ marginBottom: '20px' }}>
-              <h3 style={{ margin: 0 }}>{month} Grades</h3>
-              <div style={{ marginTop: '15px', display: 'flex', gap: '30px' }}>
-                <div className="grade-stat">
-                  <div className="grade-value">{average}</div>
-                  <div className="grade-label">Average</div>
-                </div>
-                <div className="grade-stat">
-                  <div className="grade-value">{getGradeLetter(average)}</div>
-                  <div className="grade-label">Grade</div>
-                </div>
-              </div>
-            </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Subject</th>
-                  <th>Score</th>
-                  <th>Grade</th>
-                </tr>
-              </thead>
-              <tbody>
-                {monthlyGrades.map((subject, index) => (
-                  <tr key={index}>
-                    <td>{subject.name}</td>
-                    <td>{subject.score}</td>
-                    <td>
-                      <span className={`badge ${getGradeBadgeClass(subject.score)}`}>
-                        {getGradeLetter(subject.score)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </>
-        )}
-      </div>
-    );
-  };
-
-  // Render yearly overview
-  const renderYearlyOverview = (student) => {
-    const allSubjects = new Set();
-    months.forEach(month => {
-      if (student.monthlyGrades && student.monthlyGrades[month]) {
-        student.monthlyGrades[month].forEach(subject => {
-          allSubjects.add(subject.name);
-        });
-      }
-    });
-
-    return (
-      <div className="monthly-overview">
-        <h3>Yearly Performance Overview</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Subject</th>
-              {months.map(month => (
-                <th key={month}>{month}</th>
-              ))}
-              <th>Average</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from(allSubjects).map(subjectName => {
-              let totalScore = 0;
-              let monthsWithData = 0;
-              const monthCells = months.map(month => {
-                const monthlyGrades = student.monthlyGrades && student.monthlyGrades[month];
-                const subject = monthlyGrades ? monthlyGrades.find(s => s.name === subjectName) : null;
-                if (subject) {
-                  totalScore += subject.score;
-                  monthsWithData++;
-                  return <td key={month}>{subject.score}</td>;
-                } else {
-                  return <td key={month} className="no-grades">-</td>;
-                }
-              });
-              
-              const average = monthsWithData > 0 ? Math.round(totalScore / monthsWithData) : 0;
-              const averageCell = monthsWithData > 0 ? 
-                <td>{average}</td> : 
-                <td className="no-grades">-</td>;
-              
-              return (
-                <tr key={subjectName}>
-                  <td><strong>{subjectName}</strong></td>
-                  {monthCells}
-                  {averageCell}
-                </tr>
-              );
-            })}
-            
-            {/* Overall average row */}
-            {allSubjects.size > 0 && (
-              <tr>
-                <td><strong>Overall Average</strong></td>
-                {months.map(month => {
-                  const monthlyGrades = student.monthlyGrades && student.monthlyGrades[month];
-                  if (monthlyGrades && monthlyGrades.length > 0) {
-                    const monthAverage = Math.round(monthlyGrades.reduce((sum, subject) => sum + subject.score, 0) / monthlyGrades.length);
-                    return <td key={month}><strong>{monthAverage}</strong></td>;
-                  } else {
-                    return <td key={month} className="no-grades">-</td>;
-                  }
-                })}
-                <td><strong>{Math.round(students.reduce((total, s) => total + calculateAverage(s.monthlyGrades[currentMonth] || []), 0) / students.length)}</strong></td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
-
-  // Calculate average score
-  const calculateAverage = (subjects) => {
-    if (subjects.length === 0) return 0;
-    const total = subjects.reduce((sum, subject) => sum + subject.score, 0);
-    return Math.round(total / subjects.length);
-  };
-
-  // Get letter grade
-  const getGradeLetter = (score) => {
-    if (score >= 90) return 'A';
-    if (score >= 80) return 'B';
-    if (score >= 70) return 'C';
-    if (score >= 60) return 'D';
-    return 'F';
-  };
-
-  // Get CSS class for grade badge
-  const getGradeBadgeClass = (score) => {
-    if (score >= 90) return 'badge-success';
-    if (score >= 80) return 'badge-info';
-    if (score >= 70) return 'badge-warning';
-    return 'badge-danger';
-  };
-
-  // Handle parent portal search
-  const handleSearch = (e) => {
-    e.preventDefault();
-    const id = document.getElementById('student-id').value.trim();
-    const student = students.find(s => s.id === id);
-    if (student) {
-      setCurrentStudent(student);
-      setCurrentMonth('September');
-      document.getElementById('error-message').style.display = 'none';
-      document.getElementById('student-results').style.display = 'block';
-    } else {
-      document.getElementById('error-message').textContent = 'Student not found. Please check the ID and try again.';
-      document.getElementById('error-message').style.display = 'block';
-      document.getElementById('student-results').style.display = 'none';
-    }
-  };
-
-  // Handle create student form submission
-  const handleCreateStudent = (e) => {
-    e.preventDefault();
-    const id = document.getElementById('new-student-id').value.trim();
-    const name = document.getElementById('new-student-name').value.trim();
-    const grade = document.getElementById('new-student-grade').value;
-    
-    if (!id || !name || !grade) {
-      alert('Please fill in all required fields');
-      return;
-    }
-    
-    const existingStudent = students.find(s => s.id === id);
-    if (existingStudent) {
-      alert('Student ID already exists');
-      return;
-    }
-    
-    const newStudent = {
-      id,
-      name,
-      grade,
-      monthlyGrades: {}
-    };
-    
-    setStudents([...students, newStudent]);
-    
-    // Reset form
-    document.getElementById('new-student-id').value = '';
-    document.getElementById('new-student-name').value = '';
-    document.getElementById('new-student-grade').value = '';
-    
-    // Update next student number if using default STU prefix
-    if (id.startsWith('STU')) {
-      const num = parseInt(id.substring(3));
-      if (!isNaN(num) && num >= nextStudentNumber - 1) {
-        setNextStudentNumber(num + 1);
-      }
-    }
-    
-    alert('Student created successfully!');
-  };
-
-  // Handle save grades button click
-  const handleSaveGrades = () => {
-    const nameInputs = document.querySelectorAll('.subject-name-input');
-    const scoreInputs = document.querySelectorAll('.subject-score-input');
-    
-    const newSubjects = [];
-    for (let i = 0; i < nameInputs.length; i++) {
-      const name = nameInputs[i].value.trim();
-      const score = parseInt(scoreInputs[i].value);
-      if (name && !isNaN(score) && score >= 0 && score <= 100) {
-        newSubjects.push({ name, score });
-      }
-    }
-    
-    const updatedStudents = [...students];
-    const studentIndex = updatedStudents.findIndex(s => s.id === currentStudent.id);
-    if (studentIndex !== -1) {
-      if (!updatedStudents[studentIndex].monthlyGrades) {
-        updatedStudents[studentIndex].monthlyGrades = {};
-      }
-      updatedStudents[studentIndex].monthlyGrades[currentMonth] = newSubjects;
-      setStudents(updatedStudents);
-    }
-    
-    alert(`Grades for ${currentMonth} saved successfully!`);
-  };
-
-  // Handle add subject button click
-  const handleAddSubject = () => {
-    const subjectDiv = document.createElement('div');
-    subjectDiv.className = 'grid grid-cols-2';
-    subjectDiv.style.marginBottom = '15px';
-    subjectDiv.innerHTML = `
-      <div class="form-group">
-        <label class="form-label">Subject Name</label>
-        <input type="text" class="form-control subject-name-input" placeholder="e.g., Mathematics">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Score (0-100)</label>
-        <input type="number" class="form-control subject-score-input" min="0" max="100" placeholder="Enter score">
-      </div>
-    `;
-    document.getElementById('subjects-input-container').appendChild(subjectDiv);
-  };
-
-  // Handle generate ID button click
-  const handleGenerateId = () => {
-    const newId = generateStudentId(idPrefix, currentIdNumber++);
-    document.getElementById('generated-student-id').textContent = newId;
-  };
-
-  // Handle copy ID button click
-  const handleCopyId = () => {
-    navigator.clipboard.writeText(document.getElementById('generated-student-id').textContent)
-      .then(() => {
-        alert('Student ID copied to clipboard!');
-      })
-      .catch(err => {
-        console.error('Failed to copy: ', err);
-        alert('Failed to copy ID. Please select and copy manually.');
-      });
-  };
-
-  // Handle standalone generate button click
-  const handleStandaloneGenerate = () => {
-    const prefix = document.getElementById('custom-prefix').value.trim() || 'STU';
-    const number = parseInt(document.getElementById('id-number').value) || 1;
-    const newId = generateStudentId(prefix, number);
-    document.getElementById('standalone-generated-id').textContent = newId;
-    document.getElementById('id-number').value = number + 1;
-  };
-
-  // Handle standalone copy button click
-  const handleStandaloneCopy = () => {
-    navigator.clipboard.writeText(document.getElementById('standalone-generated-id').textContent)
-      .then(() => {
-        alert('Student ID copied to clipboard!');
-      })
-      .catch(err => {
-        console.error('Failed to copy: ', err);
-        alert('Failed to copy ID. Please select and copy manually.');
-      });
-  };
-
-  // Handle apply custom settings button click
-  const handleApplyCustomSettings = () => {
-    setIdPrefix(document.getElementById('custom-prefix').value.trim() || 'STU');
-    setCurrentIdNumber(parseInt(document.getElementById('id-number').value) || 1);
-    const newId = generateStudentId(idPrefix, currentIdNumber);
-    document.getElementById('standalone-generated-id').textContent = newId;
-    document.getElementById('generated-student-id').textContent = newId;
-    alert(`Custom settings applied! Using prefix: ${idPrefix}, starting from: ${currentIdNumber}`);
-  };
-
-  // Handle export data button click
-  const handleExportData = () => {
-    const data = JSON.stringify(students, null, 2);
-    const blob = new Blob([data], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'school-grade-portal-data.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // Handle import data file change
-  const handleImportData = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const loadedData = JSON.parse(e.target.result);
-          if (Array.isArray(loadedData)) {
-            setStudents(loadedData);
-            alert('Data imported successfully!');
-            // Update next student number
-            const maxIdNum = loadedData.reduce((max, student) => {
-              if (student.id.startsWith('STU')) {
-                const num = parseInt(student.id.substring(3));
-                return isNaN(num) ? max : Math.max(max, num);
-              }
-              return max;
-            }, 0);
-            setNextStudentNumber(maxIdNum + 1);
-          } else {
-            throw new Error('Invalid data format');
-          }
-        } catch (error) {
-          alert('Error loading data: ' + error.message);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Grade Portal - Monthly Tracking</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #7c3aed;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --gray-light: #e2e8f0;
         }
-      };
-      reader.readAsText(file);
-      e.target.value = ''; // Reset file input
-    }
-  };
-
-  // Render existing students table
-  const renderExistingStudents = () => {
-    return (
-      <table>
-        <thead>
-          <tr>
-            <th>Student ID</th>
-            <th>Name</th>
-            <th>Grade</th>
-            <th>Months with Data</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {students.map(student => {
-            let monthsWithData = 0;
-            if (student.monthlyGrades) {
-              months.forEach(month => {
-                if (student.monthlyGrades[month] && student.monthlyGrades[month].length > 0) {
-                  monthsWithData++;
-                }
-              });
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #dbeafe, #e0f2fe);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .nav-tab {
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-tab.active {
+            background: var(--primary-light);
+            color: white;
+        }
+        
+        .nav-tab:not(.active):hover {
+            background: var(--gray-light);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .card-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+        
+        .card-subtitle {
+            color: var(--gray);
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--gray-light);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 16px;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #4338ca;
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #6d28d9;
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #d97706;
+        }
+        
+        .grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .grid-cols-1 {
+            grid-template-columns: 1fr;
+        }
+        
+        .grid-cols-2 {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .grid-cols-3 {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+        
+        .grid-cols-4 {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+        }
+        
+        @media (max-width: 768px) {
+            .grid-cols-2, .grid-cols-3, .grid-cols-4 {
+                grid-template-columns: 1fr;
             }
             
-            let gradeClass = '';
-            if (student.grade.includes('KG')) {
-              gradeClass = 'grade-kg';
-            } else if (student.grade.includes('Grade')) {
-              gradeClass = 'grade-elementary';
-            } else if (student.grade.includes('Prep')) {
-              gradeClass = 'grade-prep';
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
             }
             
-            return (
-              <tr key={student.id}>
-                <td>{student.id}</td>
-                <td>{student.name}</td>
-                <td><span className={`${gradeClass}`} style={{ padding: '4px 8px', borderRadius: '4px' }}>{student.grade}</span></td>
-                <td>{monthsWithData} month(s)</td>
-                <td>
-                  <button className="btn btn-warning manage-btn" data-id={student.id}>Manage Grades</button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    );
-  };
-
-  // Handle manage grades button click
-  const handleManageGrades = (studentId) => {
-    const student = students.find(s => s.id === studentId);
-    if (student) {
-      setCurrentStudent(student);
-      setCurrentMonth('September');
-      setCurrentSubjects([]);
-      
-      // Switch to Manage Grades tab
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelector('[data-tab="manage-grades"]').classList.add('active');
-      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-      document.getElementById('manage-grades').classList.add('active');
-      
-      // Load the student
-      document.getElementById('manage-student-id').value = studentId;
-      document.getElementById('manage-student-name').textContent = student.name;
-      document.getElementById('manage-student-grade').textContent = student.grade;
-      document.getElementById('manage-display-student-id').textContent = student.id;
-      
-      // Render month selector
-      document.getElementById('school-month-selector').innerHTML = '';
-      months.forEach(month => {
-        const hasData = student.monthlyGrades && student.monthlyGrades[month] && student.monthlyGrades[month].length > 0;
-        const monthBtn = document.createElement('button');
-        monthBtn.textContent = month;
-        monthBtn.className = `month-btn ${hasData ? 'has-data' : 'no-data'}`;
-        monthBtn.addEventListener('click', () => {
-          document.querySelectorAll('#school-month-selector .month-btn').forEach(btn => {
-            btn.classList.remove('active');
-          });
-          monthBtn.classList.add('active');
-          setCurrentMonth(month);
-          loadMonthGrades(student, month);
-        });
-        document.getElementById('school-month-selector').appendChild(monthBtn);
-      });
-      
-      // Set September as default active month
-      const septemberBtn = document.getElementById('school-month-selector').querySelector('button:contains("September")') || 
-                           document.getElementById('school-month-selector').querySelector('button');
-      if (septemberBtn) {
-        septemberBtn.classList.add('active');
-        setCurrentMonth('September');
-        loadMonthGrades(student, 'September');
-      }
-      
-      document.getElementById('manage-student-info').style.display = 'block';
-    }
-  };
-
-  // Load month grades for editing
-  const loadMonthGrades = (student, month) => {
-    setCurrentMonth(month);
-    document.getElementById('selected-month').textContent = month;
-    document.getElementById('save-month-display').textContent = month;
-    
-    // Initialize or get monthly grades
-    if (!student.monthlyGrades) {
-      student.monthlyGrades = {};
-    }
-    if (!student.monthlyGrades[month]) {
-      student.monthlyGrades[month] = [];
-    }
-    
-    setCurrentSubjects([...student.monthlyGrades[month]]);
-    displaySubjectsList();
-    document.getElementById('grades-form-container').style.display = 'block';
-  };
-
-  // Display subjects list for editing
-  const displaySubjectsList = () => {
-    document.getElementById('subjects-list').innerHTML = '';
-    document.getElementById('subjects-input-container').innerHTML = '';
-    
-    if (currentSubjects.length === 0) {
-      document.getElementById('subjects-list').innerHTML = '<p class="no-grades">No subjects added yet.</p>';
-      addSubjectInputField();
-      return;
-    }
-    
-    currentSubjects.forEach((subject, index) => {
-      const subjectItem = document.createElement('div');
-      subjectItem.className = 'subject-item';
-      subjectItem.innerHTML = `
-        <div class="subject-name">${subject.name}</div>
-        <div class="subject-score">Score: ${subject.score}</div>
-        <button class="btn btn-danger remove-subject-btn" data-index="${index}">Remove</button>
-      `;
-      document.getElementById('subjects-list').appendChild(subjectItem);
-      
-      // Add event listener to remove button
-      subjectItem.querySelector('.remove-subject-btn').addEventListener('click', function() {
-        const index = parseInt(this.getAttribute('data-index'));
-        const updatedSubjects = [...currentSubjects];
-        updatedSubjects.splice(index, 1);
-        setCurrentSubjects(updatedSubjects);
-        displaySubjectsList();
-      });
-    });
-    
-    // Add input field for new subject
-    addSubjectInputField();
-  };
-
-  // Add subject input field
-  const addSubjectInputField = () => {
-    const subjectDiv = document.createElement('div');
-    subjectDiv.className = 'grid grid-cols-2';
-    subjectDiv.style.marginBottom = '15px';
-    subjectDiv.innerHTML = `
-      <div class="form-group">
-        <label class="form-label">Subject Name</label>
-        <input type="text" class="form-control subject-name-input" placeholder="e.g., Mathematics">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Score (0-100)</label>
-        <input type="number" class="form-control subject-score-input" min="0" max="100" placeholder="Enter score">
-      </div>
-    `;
-    document.getElementById('subjects-input-container').appendChild(subjectDiv);
-  };
-
-  // Handle tab switching
-  const handleTabSwitch = (tabId) => {
-    setCurrentView(tabId);
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
-  };
-
-  // Render the main component
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-100">
-      <header className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <SchoolLogo />
-              <div className="logo-text text-2xl font-bold text-gray-800">SchoolGrade Portal</div>
+            .nav-tabs {
+                width: 100%;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .alert-danger {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+        
+        .alert-success {
+            background: #dcfce7;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+        }
+        
+        .student-header {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .student-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .student-name {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .student-grade {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        
+        .grades-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .grade-stat {
+            text-align: center;
+        }
+        
+        .grade-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .grade-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-light);
+        }
+        
+        th {
+            background: var(--gray-light);
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        tr:hover {
+            background: var(--gray-light);
+        }
+        
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        
+        .badge-info {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+        
+        .badge-warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .badge-danger {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .subject-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: var(--gray-light);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .subject-name {
+            font-weight: 600;
+        }
+        
+        .subject-score {
+            margin-left: 20px;
+        }
+        
+        footer {
+            background: white;
+            border-top: 1px solid var(--gray-light);
+            padding: 30px 0;
+            margin-top: 50px;
+        }
+        
+        .footer-content {
+            text-align: center;
+            color: var(--gray);
+            font-size: 14px;
+        }
+        
+        .id-generator {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 2px dashed var(--primary);
+        }
+        
+        .generated-id {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            margin: 15px 0;
+            letter-spacing: 2px;
+        }
+        
+        .copy-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--gray-light);
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Month selector styling */
+        .month-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .month-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid var(--gray-light);
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .month-btn:hover {
+            background: var(--gray-light);
+        }
+        
+        .month-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .month-btn.no-data {
+            background: #f8fafc;
+            color: #94a3b8;
+            border-style: dashed;
+        }
+        
+        .month-btn.has-data {
+            background: #dbeafe;
+            color: #1e40af;
+            font-weight: 600;
+        }
+        
+        /* Grade-specific styling */
+        .grade-kg {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .grade-elementary {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .grade-prep {
+            background-color: #f3e8ff;
+            color: #7e22ce;
+        }
+        
+        /* Monthly overview table */
+        .monthly-overview {
+            margin: 30px 0;
+        }
+        
+        .monthly-overview th, .monthly-overview td {
+            text-align: center;
+            padding: 12px;
+        }
+        
+        .monthly-overview .month-header {
+            background: var(--primary-light);
+            color: white;
+        }
+        
+        .no-grades {
+            color: var(--gray);
+            font-style: italic;
+        }
+        
+        /* Export/Import buttons */
+        .data-actions {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">SG</div>
+                <div class="logo-text">SchoolGrade Portal</div>
             </div>
-            <div className="nav-tabs flex gap-4">
-              <button 
-                className={`nav-tab px-4 py-2 rounded-lg font-medium transition-colors ${
-                  currentView === 'parent' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
-                }`}
-                onClick={() => setCurrentView('parent')}
-              >
-                Parent Portal
-              </button>
-              <button 
-                className={`nav-tab px-4 py-2 rounded-lg font-medium transition-colors ${
-                  currentView === 'school' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
-                }`}
-                onClick={() => {
-                  if (!authenticated) {
-                    setShowLogin(true);
-                  } else {
-                    setCurrentView('school');
-                  }
-                }}
-              >
-                School Portal
-              </button>
+            <div class="nav-tabs">
+                <div class="nav-tab active" id="parent-tab">Parent Portal</div>
+                <div class="nav-tab" id="school-tab">School Portal</div>
             </div>
-          </div>
         </div>
-      </header>
+    </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        {showLogin && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-8 rounded-xl shadow-2xl max-w-md w-full mx-4">
-              <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">School Portal Login</h2>
-              <form onSubmit={handleLogin}>
-                <div className="mb-4">
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">Username</label>
-                  <input
-                    type="text"
-                    id="username"
-                    value={loginCredentials.username}
-                    onChange={(e) => setLoginCredentials({...loginCredentials, username: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter your username"
-                  />
-                </div>
-                <div className="mb-6">
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                  <input
-                    type="password"
-                    id="password"
-                    value={loginCredentials.password}
-                    onChange={(e) => setLoginCredentials({...loginCredentials, password: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter your password"
-                  />
-                </div>
-                {loginError && (
-                  <div className="mb-4 text-red-500 text-sm">{loginError}</div>
-                )}
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  Login
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowLogin(false)}
-                  className="mt-4 w-full text-center text-gray-600 hover:text-gray-800 transition-colors"
-                >
-                  Cancel
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {currentView === 'parent' && (
-          <div className="card bg-white rounded-xl shadow-lg p-8">
-            <h2 className="card-title text-2xl font-bold text-gray-800 mb-4">Parent Portal</h2>
-            <p className="card-subtitle text-gray-600 mb-6">Enter your child's Student ID to view their monthly grades.</p>
-            
-            <form id="search-form" onSubmit={handleSearch}>
-              <div className="form-group mb-6">
-                <label htmlFor="student-id" className="form-label block text-sm font-medium text-gray-700 mb-2">Student ID</label>
-                <input
-                  type="text"
-                  id="student-id"
-                  className="form-control w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter Student ID (e.g., STU001)"
-                  required
-                />
-              </div>
-              <button type="submit" className="btn btn-primary bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                View Grades
-              </button>
-            </form>
-            
-            <div id="error-message" className="alert alert-danger bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-6 hidden"></div>
-            
-            <div id="student-results" className="hidden">
-              <div className="student-header bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-lg mb-6">
-                <div className="student-info flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <div className="student-name text-2xl font-bold">{currentStudent?.name}</div>
-                    <div className="student-grade text-lg opacity-90">{currentStudent?.grade}</div>
-                    <div className="text-sm opacity-80">Student ID: <span id="display-student-id">{currentStudent?.id}</span></div>
-                  </div>
-                </div>
-              </div>
-              
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">Monthly Grades Overview</h3>
-              {renderParentMonthSelector(currentStudent)}
-              
-              <div id="monthly-grades-container" className="mt-6">
-                {currentStudent && displayMonthlyGrades(currentStudent, currentMonth)}
-              </div>
-              
-              {currentStudent && renderYearlyOverview(currentStudent)}
-            </div>
-          </div>
-        )}
-
-        {currentView === 'school' && authenticated && (
-          <div className="card bg-white rounded-xl shadow-lg p-8">
-            <h2 className="card-title text-2xl font-bold text-gray-800 mb-4">School Portal</h2>
-            <p className="card-subtitle text-gray-600 mb-6">Create student records and manage monthly grades.</p>
-            
-            <div className="tabs flex border-b border-gray-200 mb-6">
-              <button 
-                className="tab px-4 py-2 font-medium border-b-2 border-transparent hover:text-blue-600 transition-colors"
-                data-tab="create-student"
-                onClick={() => handleTabSwitch('create-student')}
-              >
-                Create Student
-              </button>
-              <button 
-                className="tab px-4 py-2 font-medium border-b-2 border-transparent hover:text-blue-600 transition-colors"
-                data-tab="manage-grades"
-                onClick={() => handleTabSwitch('manage-grades')}
-              >
-                Manage Grades
-              </button>
-              <button 
-                className="tab px-4 py-2 font-medium border-b-2 border-transparent hover:text-blue-600 transition-colors"
-                data-tab="generate-id"
-                onClick={() => handleTabSwitch('generate-id')}
-              >
-                Generate Student ID
-              </button>
-              <button 
-                className="tab px-4 py-2 font-medium border-b-2 border-transparent hover:text-blue-600 transition-colors"
-                data-tab="view-students"
-                onClick={() => handleTabSwitch('view-students')}
-              >
-                View All Students
-              </button>
-            </div>
-            
-            <div id="create-student" className="tab-content active">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">Student Information</h3>
-              
-              <div className="id-generator bg-blue-50 p-6 rounded-lg border-2 border-dashed border-blue-200 mb-6">
-                <h4 className="font-medium text-gray-800 mb-2">Student ID Generator</h4>
-                <p className="text-sm text-gray-600 mb-4">Click the button below to generate a unique Student ID, or enter your own.</p>
-                <div className="generated-id text-2xl font-bold text-blue-600 text-center p-3 bg-white rounded-lg mb-4">
-                  {generateStudentId()}
-                </div>
-                <div className="flex justify-center gap-2">
-                  <button 
-                    type="button" 
-                    className="btn btn-secondary bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                    onClick={handleGenerateId}
-                  >
-                    Generate New ID
-                  </button>
-                  <button 
-                    type="button" 
-                    className="copy-btn bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                    onClick={handleCopyId}
-                  >
-                    Copy
-                  </button>
-                </div>
-              </div>
-              
-              <form id="create-student-form" onSubmit={handleCreateStudent}>
-                <div className="grid grid-cols-3 gap-4 mb-6">
-                  <div className="form-group">
-                    <label htmlFor="new-student-id" className="form-label block text-sm font-medium text-gray-700 mb-2">Student ID *</label>
-                    <input
-                      type="text"
-                      id="new-student-id"
-                      className="form-control w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="e.g., STU004"
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="new-student-name" className="form-label block text-sm font-medium text-gray-700 mb-2">Student Name *</label>
-                    <input
-                      type="text"
-                      id="new-student-name"
-                      className="form-control w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter full name"
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="new-student-grade" className="form-label block text-sm font-medium text-gray-700 mb-2">Grade Level *</label>
-                    <select
-                      id="new-student-grade"
-                      className="form-control w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      required
-                    >
-                      <option value="">Select Grade</option>
-                      <option value="KG1">KG1</option>
-                      <option value="KG2">KG2</option>
-                      <option value="Grade 1">Grade 1</option>
-                      <option value="Grade 2">Grade 2</option>
-                      <option value="Grade 3">Grade 3</option>
-                      <option value="Grade 4">Grade 4</option>
-                      <option value="Grade 5">Grade 5</option>
-                      <option value="Grade 6">Grade 6</option>
-                      <option value="Prep 1">Prep 1</option>
-                      <option value="Prep 2">Prep 2</option>
-                      <option value="Prep 3">Prep 3</option>
-                    </select>
-                  </div>
-                </div>
-                <button type="submit" className="btn btn-success bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium">
-                  Create Student Record
-                </button>
-              </form>
-            </div>
-            
-            <div id="manage-grades" className="tab-content">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">Manage Monthly Grades</h3>
-              
-              <form id="find-student-form">
-                <div className="form-group mb-6">
-                  <label htmlFor="manage-student-id" className="form-label block text-sm font-medium text-gray-700 mb-2">Student ID *</label>
-                  <input
-                    type="text"
-                    id="manage-student-id"
-                    className="form-control w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter Student ID"
-                    required
-                  />
-                </div>
-                <button type="submit" className="btn btn-primary bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                  Load Student
-                </button>
-              </form>
-              
-              <div id="manage-student-info" className="hidden mt-6">
-                <div className="student-header bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-lg mb-6">
-                  <div className="student-info flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                      <div className="student-name text-2xl font-bold" id="manage-student-name">John Smith</div>
-                      <div className="student-grade text-lg opacity-90" id="manage-student-grade">Grade 1</div>
-                      <div className="text-sm opacity-80">Student ID: <span id="manage-display-student-id">STU001</span></div>
+    <div class="container">
+        <div id="parent-portal">
+            <div class="card">
+                <h2 class="card-title">Parent Portal</h2>
+                <p class="card-subtitle">Enter your child's Student ID to view their monthly grades.</p>
+                
+                <form id="search-form">
+                    <div class="form-group">
+                        <label for="student-id" class="form-label">Student ID</label>
+                        <input type="text" id="student-id" class="form-control" placeholder="Enter Student ID (e.g., STU001)" required>
                     </div>
-                  </div>
+                    <button type="submit" class="btn btn-primary">View Grades</button>
+                </form>
+                
+                <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+                
+                <div id="student-results" style="display: none;">
+                    <div class="student-header">
+                        <div class="student-info">
+                            <div>
+                                <div class="student-name" id="student-name">John Smith</div>
+                                <div class="student-grade" id="student-grade">Grade 1</div>
+                                <div>Student ID: <span id="display-student-id">STU001</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3>Monthly Grades Overview</h3>
+                    <div class="month-selector" id="parent-month-selector">
+                        <!-- Months will be populated here -->
+                    </div>
+                    
+                    <div id="monthly-grades-container">
+                        <!-- Monthly grades will be displayed here -->
+                    </div>
+                    
+                    <div class="monthly-overview">
+                        <h3>Yearly Performance Overview</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>September</th>
+                                    <th>October</th>
+                                    <th>November</th>
+                                    <th>December</th>
+                                    <th>January</th>
+                                    <th>February</th>
+                                    <th>March</th>
+                                    <th>April</th>
+                                    <th>May</th>
+                                    <th>June</th>
+                                    <th>Average</th>
+                                </tr>
+                            </thead>
+                            <tbody id="yearly-overview-table">
+                                <!-- Yearly overview will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="school-portal" style="display: none;">
+            <div class="card">
+                <h2 class="card-title">School Portal</h2>
+                <p class="card-subtitle">Create student records and manage monthly grades.</p>
+                
+                <div class="tabs">
+                    <div class="tab active" data-tab="create-student">Create Student</div>
+                    <div class="tab" data-tab="manage-grades">Manage Grades</div>
+                    <div class="tab" data-tab="generate-id">Generate Student ID</div>
+                    <div class="tab" data-tab="view-students">View All Students</div>
                 </div>
                 
-                <h4 className="text-lg font-medium text-gray-800 mb-4">Select Month</h4>
-                <div className="month-selector" id="school-month-selector">
-                  {months.map(month => (
-                    <button
-                      key={month}
-                      className="month-btn px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-colors"
-                      onClick={() => setCurrentMonth(month)}
-                    >
-                      {month}
-                    </button>
-                  ))}
+                <div id="create-student" class="tab-content active">
+                    <h3>Student Information</h3>
+                    
+                    <div class="id-generator">
+                        <h4>Student ID Generator</h4>
+                        <p>Click the button below to generate a unique Student ID, or enter your own.</p>
+                        <div class="generated-id" id="generated-student-id">STU0000</div>
+                        <div style="text-align: center;">
+                            <button type="button" id="generate-id-btn" class="btn btn-secondary">Generate New ID</button>
+                            <button type="button" id="copy-id-btn" class="copy-btn">Copy</button>
+                        </div>
+                    </div>
+                    
+                    <form id="create-student-form">
+                        <div class="grid grid-cols-3" id="student-info-grid">
+                            <div class="form-group">
+                                <label for="new-student-id" class="form-label">Student ID *</label>
+                                <input type="text" id="new-student-id" class="form-control" placeholder="e.g., STU004" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="new-student-name" class="form-label">Student Name *</label>
+                                <input type="text" id="new-student-name" class="form-control" placeholder="Enter full name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="new-student-grade" class="form-label">Grade Level *</label>
+                                <select id="new-student-grade" class="form-control" required>
+                                    <option value="">Select Grade</option>
+                                    <option value="KG1">KG1</option>
+                                    <option value="KG2">KG2</option>
+                                    <option value="Grade 1">Grade 1</option>
+                                    <option value="Grade 2">Grade 2</option>
+                                    <option value="Grade 3">Grade 3</option>
+                                    <option value="Grade 4">Grade 4</option>
+                                    <option value="Grade 5">Grade 5</option>
+                                    <option value="Grade 6">Grade 6</option>
+                                    <option value="Prep 1">Prep 1</option>
+                                    <option value="Prep 2">Prep 2</option>
+                                    <option value="Prep 3">Prep 3</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success">Create Student Record</button>
+                    </form>
                 </div>
                 
-                <div id="grades-form-container" className="mt-6">
-                  <h4 className="text-lg font-medium text-gray-800 mb-4">Enter Grades for <span id="selected-month">September</span></h4>
-                  
-                  <div id="subjects-input-container" className="mb-6">
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div className="form-group">
-                        <label className="form-label block text-sm font-medium text-gray-700 mb-2">Subject Name</label>
-                        <input
-                          type="text"
-                          className="form-control w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="e.g., Mathematics"
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label block text-sm font-medium text-gray-700 mb-2">Score (0-100)</label>
-                        <input
-                          type="number"
-                          className="form-control w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          min="0"
-                          max="100"
-                          placeholder="Enter score"
-                        />
-                      </div>
+                <div id="manage-grades" class="tab-content">
+                    <h3>Manage Monthly Grades</h3>
+                    
+                    <form id="find-student-form">
+                        <div class="form-group">
+                            <label for="manage-student-id" class="form-label">Student ID *</label>
+                            <input type="text" id="manage-student-id" class="form-control" placeholder="Enter Student ID" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Load Student</button>
+                    </form>
+                    
+                    <div id="manage-student-info" style="display: none; margin: 30px 0;">
+                        <div class="student-header">
+                            <div class="student-info">
+                                <div>
+                                    <div class="student-name" id="manage-student-name">John Smith</div>
+                                    <div class="student-grade" id="manage-student-grade">Grade 1</div>
+                                    <div>Student ID: <span id="manage-display-student-id">STU001</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h4>Select Month</h4>
+                        <div class="month-selector" id="school-month-selector">
+                            <!-- Months will be populated here -->
+                        </div>
+                        
+                        <div id="grades-form-container" style="display: none; margin-top: 30px;">
+                            <h4>Enter Grades for <span id="selected-month">September</span></h4>
+                            
+                            <div id="subjects-input-container">
+                                <!-- Subject inputs will be generated here -->
+                            </div>
+                            
+                            <button type="button" id="add-subject-btn" class="btn btn-primary" style="margin: 20px 0;">Add Subject</button>
+                            
+                            <div id="existing-subjects-list" style="margin: 20px 0;">
+                                <h5>Current Subjects</h5>
+                                <div id="subjects-list">
+                                    <!-- Existing subjects will appear here -->
+                                </div>
+                            </div>
+                            
+                            <button type="button" id="save-grades-btn" class="btn btn-success">Save Grades for <span id="save-month-display">September</span></button>
+                        </div>
                     </div>
-                  </div>
-                  
-                  <button 
-                    type="button" 
-                    className="btn btn-primary bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium mb-6"
-                    onClick={handleAddSubject}
-                  >
-                    Add Subject
-                  </button>
-                  
-                  <div id="existing-subjects-list" className="mb-6">
-                    <h5 className="text-md font-medium text-gray-800 mb-4">Current Subjects</h5>
-                    <div id="subjects-list" className="space-y-2">
-                      <div className="subject-item flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <div className="subject-name font-medium">Mathematics</div>
-                        <div className="subject-score">Score: 95</div>
-                        <button className="btn btn-danger bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition-colors text-sm">
-                          Remove
-                        </button>
-                      </div>
+                </div>
+                
+                <div id="generate-id" class="tab-content">
+                    <h3>Student ID Generator</h3>
+                    <p>Use this tool to generate unique Student IDs for new students.</p>
+                    
+                    <div class="id-generator">
+                        <h4>Generate a New Student ID</h4>
+                        <div class="generated-id" id="standalone-generated-id">STU0000</div>
+                        <div style="text-align: center; margin-top: 20px;">
+                            <button type="button" id="standalone-generate-btn" class="btn btn-secondary">Generate New ID</button>
+                            <button type="button" id="standalone-copy-btn" class="copy-btn">Copy</button>
+                        </div>
                     </div>
-                  </div>
-                  
-                  <button 
-                    type="button" 
-                    className="btn btn-success bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
-                    onClick={handleSaveGrades}
-                  >
-                    Save Grades for <span id="save-month-display">September</span>
-                  </button>
+                    
+                    <div class="form-group" style="margin-top: 30px;">
+                        <label for="custom-prefix" class="form-label">Custom Prefix (optional)</label>
+                        <input type="text" id="custom-prefix" class="form-control" placeholder="e.g., SCH, ACD (leave blank for default 'STU')">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id-number" class="form-label">Starting Number</label>
+                        <input type="number" id="id-number" class="form-control" value="1" min="1">
+                    </div>
+                    
+                    <button type="button" id="apply-custom-settings" class="btn btn-primary">Apply Custom Settings</button>
+                    
+                    <div class="alert alert-success" style="margin-top: 30px;">
+                        <h4>How to Use:</h4>
+                        <p>1. Generate a new ID using the button above</p>
+                        <p>2. Customize the prefix and starting number if needed</p>
+                        <p>3. Copy the generated ID and use it when creating a new student record</p>
+                    </div>
                 </div>
-              </div>
+                
+                <div id="view-students" class="tab-content">
+                    <h3>Existing Students</h3>
+                    <div class="data-actions">
+                        <button type="button" id="export-data-btn" class="btn btn-primary">Export Data</button>
+                        <label class="btn btn-success" style="cursor: pointer;">
+                            Import Data
+                            <input type="file" id="import-data-input" accept=".json" style="display: none;">
+                        </label>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Grade</th>
+                                <th>Months with Data</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-table">
+                            <!-- Existing students will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            
-            <div id="generate-id" className="tab-content">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">Student ID Generator</h3>
-              <p className="text-gray-600 mb-6">Use this tool to generate unique Student IDs for new students.</p>
-              
-              <div className="id-generator bg-blue-50 p-6 rounded-lg border-2 border-dashed border-blue-200 mb-6">
-                <h4 className="font-medium text-gray-800 mb-2">Generate a New Student ID</h4>
-                <div className="generated-id text-2xl font-bold text-blue-600 text-center p-3 bg-white rounded-lg mb-4">
-                  {generateStudentId()}
-                </div>
-                <div className="flex justify-center gap-2">
-                  <button 
-                    type="button" 
-                    className="btn btn-secondary bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                    onClick={handleStandaloneGenerate}
-                  >
-                    Generate New ID
-                  </button>
-                  <button 
-                    type="button" 
-                    className="copy-btn bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                    onClick={handleStandaloneCopy}
-                  >
-                    Copy
-                  </button>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div className="form-group">
-                  <label htmlFor="custom-prefix" className="form-label block text-sm font-medium text-gray-700 mb-2">Custom Prefix (optional)</label>
-                  <input
-                    type="text"
-                    id="custom-prefix"
-                    className="form-control w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., SCH, ACD (leave blank for default 'STU')"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="id-number" className="form-label block text-sm font-medium text-gray-700 mb-2">Starting Number</label>
-                  <input
-                    type="number"
-                    id="id-number"
-                    className="form-control w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    value="1"
-                    min="1"
-                  />
-                </div>
-              </div>
-              
-              <button 
-                type="button" 
-                className="btn btn-primary bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium mb-6"
-                onClick={handleApplyCustomSettings}
-              >
-                Apply Custom Settings
-              </button>
-              
-              <div className="alert alert-success bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg">
-                <h4 className="font-medium mb-2">How to Use:</h4>
-                <ul className="list-disc pl-5 space-y-1 text-sm">
-                  <li>Generate a new ID using the button above</li>
-                  <li>Customize the prefix and starting number if needed</li>
-                  <li>Copy the generated ID and use it when creating a new student record</li>
-                </ul>
-              </div>
-            </div>
-            
-            <div id="view-students" className="tab-content">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">Existing Students</h3>
-              
-              <div className="data-actions flex gap-4 mb-6 flex-wrap">
-                <button 
-                  type="button" 
-                  className="btn btn-primary bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                  onClick={handleExportData}
-                >
-                  Export Data
-                </button>
-                <label className="btn btn-success bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium cursor-pointer">
-                  Import Data
-                  <input 
-                    type="file" 
-                    id="import-data-input" 
-                    accept=".json" 
-                    style={{ display: 'none' }} 
-                    onChange={handleImportData}
-                  />
-                </label>
-              </div>
-              
-              {renderExistingStudents()}
-            </div>
-          </div>
-        )}
-      </main>
-
-      <footer className="bg-white border-t border-gray-200 mt-12">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="footer-content text-center text-gray-600 text-sm">
-            &copy; 2023 Leaders Language School. All rights reserved.
-          </div>
         </div>
-      </footer>
     </div>
-  );
-};
 
-export default App;
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                &copy; 2023 SchoolGrade Portal. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Months array
+        const months = [
+            'September', 'October', 'November', 'December',
+            'January', 'February', 'March', 'April', 'May', 'June'
+        ];
+
+        // Mock data with monthly grades
+        let students = [
+            {
+                id: 'STU001',
+                name: 'Ahmed Mohamed',
+                grade: 'KG1',
+                monthlyGrades: {
+                    September: [
+                        { name: 'Arabic', score: 92 },
+                        { name: 'English', score: 88 },
+                        { name: 'Math', score: 95 },
+                        { name: 'Art', score: 97 },
+                        { name: 'Music', score: 90 }
+                    ],
+                    October: [
+                        { name: 'Arabic', score: 94 },
+                        { name: 'English', score: 90 },
+                        { name: 'Math', score: 96 },
+                        { name: 'Art', score: 95 },
+                        { name: 'Music', score: 92 }
+                    ],
+                    November: [
+                        { name: 'Arabic', score: 90 },
+                        { name: 'English', score: 87 },
+                        { name: 'Math', score: 93 },
+                        { name: 'Art', score: 96 },
+                        { name: 'Music', score: 89 }
+                    ]
+                }
+            },
+            {
+                id: 'STU002',
+                name: 'Fatima Ali',
+                grade: 'Grade 3',
+                monthlyGrades: {
+                    September: [
+                        { name: 'Arabic', score: 87 },
+                        { name: 'English', score: 91 },
+                        { name: 'Math', score: 85 },
+                        { name: 'Science', score: 89 },
+                        { name: 'Social Studies', score: 93 }
+                    ],
+                    October: [
+                        { name: 'Arabic', score: 89 },
+                        { name: 'English', score: 93 },
+                        { name: 'Math', score: 88 },
+                        { name: 'Science', score: 91 },
+                        { name: 'Social Studies', score: 95 }
+                    ]
+                }
+            },
+            {
+                id: 'STU003',
+                name: 'Omar Hassan',
+                grade: 'Prep 2',
+                monthlyGrades: {
+                    September: [
+                        { name: 'Arabic', score: 78 },
+                        { name: 'English', score: 82 },
+                        { name: 'Math', score: 88 },
+                        { name: 'Science', score: 85 },
+                        { name: 'History', score: 80 },
+                        { name: 'Geography', score: 83 }
+                    ]
+                }
+            },
+            {
+                id: 'STU004',
+                name: 'Layla Ibrahim',
+                grade: 'Grade 6',
+                monthlyGrades: {
+                    September: [
+                        { name: 'Arabic', score: 94 },
+                        { name: 'English', score: 89 },
+                        { name: 'Math', score: 92 },
+                        { name: 'Science', score: 87 },
+                        { name: 'Computer Science', score: 95 },
+                        { name: 'Physical Education', score: 91 }
+                    ]
+                }
+            },
+            {
+                id: 'STU005',
+                name: 'Youssef Mahmoud',
+                grade: 'KG2',
+                monthlyGrades: {
+                    September: [
+                        { name: 'Arabic', score: 90 },
+                        { name: 'English', score: 85 },
+                        { name: 'Math Basics', score: 93 },
+                        { name: 'Art', score: 96 },
+                        { name: 'Music', score: 88 }
+                    ],
+                    October: [
+                        { name: 'Arabic', score: 92 },
+                        { name: 'English', score: 88 },
+                        { name: 'Math Basics', score: 95 },
+                        { name: 'Art', score: 97 },
+                        { name: 'Music', score: 91 }
+                    ],
+                    November: [
+                        { name: 'Arabic', score: 89 },
+                        { name: 'English', score: 86 },
+                        { name: 'Math Basics', score: 94 },
+                        { name: 'Art', score: 95 },
+                        { name: 'Music', score: 90 }
+                    ],
+                    December: [
+                        { name: 'Arabic', score: 93 },
+                        { name: 'English', score: 89 },
+                        { name: 'Math Basics', score: 96 },
+                        { name: 'Art', score: 98 },
+                        { name: 'Music', score: 92 }
+                    ]
+                }
+            }
+        ];
+
+        // DOM Elements
+        const parentTab = document.getElementById('parent-tab');
+        const schoolTab = document.getElementById('school-tab');
+        const parentPortal = document.getElementById('parent-portal');
+        const schoolPortal = document.getElementById('school-portal');
+        const searchForm = document.getElementById('search-form');
+        const studentIdInput = document.getElementById('student-id');
+        const errorMessage = document.getElementById('error-message');
+        const studentResults = document.getElementById('student-results');
+        const studentName = document.getElementById('student-name');
+        const studentGrade = document.getElementById('student-grade');
+        const displayStudentId = document.getElementById('display-student-id');
+        const parentMonthSelector = document.getElementById('parent-month-selector');
+        const monthlyGradesContainer = document.getElementById('monthly-grades-container');
+        const yearlyOverviewTable = document.getElementById('yearly-overview-table');
+        const createStudentForm = document.getElementById('create-student-form');
+        const newStudentId = document.getElementById('new-student-id');
+        const newStudentName = document.getElementById('new-student-name');
+        const newStudentGrade = document.getElementById('new-student-grade');
+        const generatedStudentId = document.getElementById('generated-student-id');
+        const generateIdBtn = document.getElementById('generate-id-btn');
+        const copyIdBtn = document.getElementById('copy-id-btn');
+        const standaloneGeneratedId = document.getElementById('standalone-generated-id');
+        const standaloneGenerateBtn = document.getElementById('standalone-generate-btn');
+        const standaloneCopyBtn = document.getElementById('standalone-copy-btn');
+        const customPrefix = document.getElementById('custom-prefix');
+        const idNumber = document.getElementById('id-number');
+        const applyCustomSettingsBtn = document.getElementById('apply-custom-settings');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const findStudentForm = document.getElementById('find-student-form');
+        const manageStudentId = document.getElementById('manage-student-id');
+        const manageStudentInfo = document.getElementById('manage-student-info');
+        const manageStudentName = document.getElementById('manage-student-name');
+        const manageStudentGrade = document.getElementById('manage-student-grade');
+        const manageDisplayStudentId = document.getElementById('manage-display-student-id');
+        const schoolMonthSelector = document.getElementById('school-month-selector');
+        const gradesFormContainer = document.getElementById('grades-form-container');
+        const selectedMonthSpan = document.getElementById('selected-month');
+        const saveMonthDisplay = document.getElementById('save-month-display');
+        const subjectsInputContainer = document.getElementById('subjects-input-container');
+        const addSubjectBtn = document.getElementById('add-subject-btn');
+        const subjectsList = document.getElementById('subjects-list');
+        const saveGradesBtn = document.getElementById('save-grades-btn');
+        const studentsTable = document.getElementById('students-table');
+        const exportDataBtn = document.getElementById('export-data-btn');
+        const importDataInput = document.getElementById('import-data-input');
+
+        // State
+        let currentStudent = null;
+        let currentMonth = 'September';
+        let currentSubjects = [];
+        let nextStudentNumber = 6; // Start after the 5 demo students
+        let idPrefix = 'STU';
+        let currentIdNumber = 1;
+
+        // Tab switching for main navigation
+        parentTab.addEventListener('click', () => {
+            parentTab.classList.add('active');
+            schoolTab.classList.remove('active');
+            parentPortal.style.display = 'block';
+            schoolPortal.style.display = 'none';
+        });
+
+        schoolTab.addEventListener('click', () => {
+            schoolTab.classList.add('active');
+            parentTab.classList.remove('active');
+            schoolPortal.style.display = 'block';
+            parentPortal.style.display = 'none';
+            renderExistingStudents();
+        });
+
+        // Tab switching within School Portal
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Hide all tab contents
+                tabContents.forEach(content => content.classList.remove('active'));
+                // Show corresponding tab content
+                const tabId = tab.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // Search for student in Parent Portal
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = studentIdInput.value.trim();
+            const student = students.find(s => s.id === id);
+            
+            if (student) {
+                currentStudent = student;
+                displayStudentInfo(student);
+                renderParentMonthSelector(student);
+                renderYearlyOverview(student);
+                errorMessage.style.display = 'none';
+                studentResults.style.display = 'block';
+            } else {
+                errorMessage.textContent = 'Student not found. Please check the ID and try again.';
+                errorMessage.style.display = 'block';
+                studentResults.style.display = 'none';
+            }
+        });
+
+        // Display student information in Parent Portal
+        function displayStudentInfo(student) {
+            studentName.textContent = student.name;
+            studentGrade.textContent = student.grade;
+            displayStudentId.textContent = student.id;
+        }
+
+        // Render month selector for Parent Portal
+        function renderParentMonthSelector(student) {
+            parentMonthSelector.innerHTML = '';
+            
+            months.forEach(month => {
+                const hasData = student.monthlyGrades && student.monthlyGrades[month] && student.monthlyGrades[month].length > 0;
+                
+                const monthBtn = document.createElement('button');
+                monthBtn.textContent = month;
+                monthBtn.className = 'month-btn';
+                if (hasData) {
+                    monthBtn.classList.add('has-data');
+                } else {
+                    monthBtn.classList.add('no-data');
+                }
+                
+                monthBtn.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('.month-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    // Add active class to clicked button
+                    monthBtn.classList.add('active');
+                    currentMonth = month;
+                    displayMonthlyGrades(student, month);
+                });
+                
+                parentMonthSelector.appendChild(monthBtn);
+            });
+            
+            // Set first month with data as active, or September if no data
+            const firstMonthWithData = months.find(month => 
+                student.monthlyGrades && student.monthlyGrades[month] && student.monthlyGrades[month].length > 0
+            ) || 'September';
+            
+            const firstBtn = parentMonthSelector.querySelector(`button:contains('${firstMonthWithData}')`) || 
+                           parentMonthSelector.querySelector('button');
+            if (firstBtn) {
+                firstBtn.classList.add('active');
+                currentMonth = firstMonthWithData;
+                displayMonthlyGrades(student, firstMonthWithData);
+            }
+        }
+
+        // Display monthly grades
+        function displayMonthlyGrades(student, month) {
+            const monthlyGrades = student.monthlyGrades && student.monthlyGrades[month] ? student.monthlyGrades[month] : [];
+            
+            monthlyGradesContainer.innerHTML = '';
+            
+            if (monthlyGrades.length === 0) {
+                monthlyGradesContainer.innerHTML = `
+                    <div class="alert alert-danger">
+                        No grades recorded for ${month} yet.
+                    </div>
+                `;
+                return;
+            }
+            
+            const average = calculateAverage(monthlyGrades);
+            
+            monthlyGradesContainer.innerHTML = `
+                <div class="student-header" style="margin-bottom: 20px;">
+                    <h3 style="margin: 0;">${month} Grades</h3>
+                    <div style="margin-top: 15px; display: flex; gap: 30px;">
+                        <div class="grade-stat">
+                            <div class="grade-value">${average}</div>
+                            <div class="grade-label">Average</div>
+                        </div>
+                        <div class="grade-stat">
+                            <div class="grade-value">${getGradeLetter(average)}</div>
+                            <div class="grade-label">Grade</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Score</th>
+                            <th>Grade</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthly-subjects-table">
+                    </tbody>
+                </table>
+            `;
+            
+            const monthlySubjectsTable = document.getElementById('monthly-subjects-table');
+            
+            monthlyGrades.forEach(subject => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${subject.name}</td>
+                    <td>${subject.score}</td>
+                    <td>
+                        <span class="badge ${getGradeBadgeClass(subject.score)}">
+                            ${getGradeLetter(subject.score)}
+                        </span>
+                    </td>
+                `;
+                monthlySubjectsTable.appendChild(row);
+            });
+        }
+
+        // Render yearly overview
+        function renderYearlyOverview(student) {
+            yearlyOverviewTable.innerHTML = '';
+            
+            // Get all subjects across all months
+            const allSubjects = new Set();
+            months.forEach(month => {
+                if (student.monthlyGrades && student.monthlyGrades[month]) {
+                    student.monthlyGrades[month].forEach(subject => {
+                        allSubjects.add(subject.name);
+                    });
+                }
+            });
+            
+            // Create a row for each subject
+            allSubjects.forEach(subjectName => {
+                const row = document.createElement('tr');
+                let totalScore = 0;
+                let monthsWithData = 0;
+                let monthCells = '';
+                
+                months.forEach(month => {
+                    const monthlyGrades = student.monthlyGrades && student.monthlyGrades[month];
+                    const subject = monthlyGrades ? monthlyGrades.find(s => s.name === subjectName) : null;
+                    
+                    if (subject) {
+                        monthCells += `<td>${subject.score}</td>`;
+                        totalScore += subject.score;
+                        monthsWithData++;
+                    } else {
+                        monthCells += `<td class="no-grades">-</td>`;
+                    }
+                });
+                
+                // Calculate average for this subject
+                const average = monthsWithData > 0 ? Math.round(totalScore / monthsWithData) : 0;
+                const averageCell = monthsWithData > 0 ? 
+                    `<td>${average}</td>` : 
+                    `<td class="no-grades">-</td>`;
+                
+                row.innerHTML = `
+                    <td><strong>${subjectName}</strong></td>
+                    ${monthCells}
+                    ${averageCell}
+                `;
+                yearlyOverviewTable.appendChild(row);
+            });
+            
+            // Add overall average row
+            if (allSubjects.size > 0) {
+                const overallRow = document.createElement('tr');
+                overallRow.innerHTML = `<td><strong>Overall Average</strong></td>`;
+                
+                let totalAllScores = 0;
+                let totalAllEntries = 0;
+                
+                months.forEach(month => {
+                    const monthlyGrades = student.monthlyGrades && student.monthlyGrades[month];
+                    if (monthlyGrades && monthlyGrades.length > 0) {
+                        const monthAverage = calculateAverage(monthlyGrades);
+                        overallRow.innerHTML += `<td><strong>${monthAverage}</strong></td>`;
+                        totalAllScores += monthAverage;
+                        totalAllEntries++;
+                    } else {
+                        overallRow.innerHTML += `<td class="no-grades">-</td>`;
+                    }
+                });
+                
+                const overallAverage = totalAllEntries > 0 ? Math.round(totalAllScores / totalAllEntries) : 0;
+                overallRow.innerHTML += totalAllEntries > 0 ? 
+                    `<td><strong>${overallAverage}</strong></td>` : 
+                    `<td class="no-grades">-</td>`;
+                
+                yearlyOverviewTable.appendChild(overallRow);
+            }
+        }
+
+        // Find student in School Portal (Manage Grades)
+        findStudentForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = manageStudentId.value.trim();
+            const student = students.find(s => s.id === id);
+            
+            if (student) {
+                currentStudent = student;
+                displayManageStudentInfo(student);
+                renderSchoolMonthSelector(student);
+                manageStudentInfo.style.display = 'block';
+            } else {
+                alert('Student not found. Please check the ID and try again.');
+                manageStudentInfo.style.display = 'none';
+            }
+        });
+
+        // Display student information in School Portal
+        function displayManageStudentInfo(student) {
+            manageStudentName.textContent = student.name;
+            manageStudentGrade.textContent = student.grade;
+            manageDisplayStudentId.textContent = student.id;
+        }
+
+        // Render month selector for School Portal
+        function renderSchoolMonthSelector(student) {
+            schoolMonthSelector.innerHTML = '';
+            
+            months.forEach(month => {
+                const hasData = student.monthlyGrades && student.monthlyGrades[month] && student.monthlyGrades[month].length > 0;
+                
+                const monthBtn = document.createElement('button');
+                monthBtn.textContent = month;
+                monthBtn.className = 'month-btn';
+                if (hasData) {
+                    monthBtn.classList.add('has-data');
+                } else {
+                    monthBtn.classList.add('no-data');
+                }
+                
+                monthBtn.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('#school-month-selector .month-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    // Add active class to clicked button
+                    monthBtn.classList.add('active');
+                    currentMonth = month;
+                    loadMonthGrades(student, month);
+                });
+                
+                schoolMonthSelector.appendChild(monthBtn);
+            });
+            
+            // Set September as default active month
+            const septemberBtn = schoolMonthSelector.querySelector('button:contains("September")') || 
+                               schoolMonthSelector.querySelector('button');
+            if (septemberBtn) {
+                septemberBtn.classList.add('active');
+                currentMonth = 'September';
+                loadMonthGrades(currentStudent, 'September');
+            }
+        }
+
+        // Load month grades for editing
+        function loadMonthGrades(student, month) {
+            selectedMonthSpan.textContent = month;
+            saveMonthDisplay.textContent = month;
+            
+            // Initialize or get monthly grades
+            if (!student.monthlyGrades) {
+                student.monthlyGrades = {};
+            }
+            if (!student.monthlyGrades[month]) {
+                student.monthlyGrades[month] = [];
+            }
+            
+            currentSubjects = [...student.monthlyGrades[month]];
+            
+            // Display existing subjects
+            displaySubjectsList();
+            
+            // Show the grades form
+            gradesFormContainer.style.display = 'block';
+        }
+
+        // Display subjects list for editing
+        function displaySubjectsList() {
+            subjectsList.innerHTML = '';
+            subjectsInputContainer.innerHTML = '';
+            
+            if (currentSubjects.length === 0) {
+                subjectsList.innerHTML = '<p class="no-grades">No subjects added yet.</p>';
+                addSubjectInputField();
+                return;
+            }
+            
+            currentSubjects.forEach((subject, index) => {
+                const subjectItem = document.createElement('div');
+                subjectItem.className = 'subject-item';
+                subjectItem.innerHTML = `
+                    <div class="subject-name">${subject.name}</div>
+                    <div class="subject-score">Score: ${subject.score}</div>
+                    <button class="btn btn-danger remove-subject-btn" data-index="${index}">Remove</button>
+                `;
+                subjectsList.appendChild(subjectItem);
+                
+                // Add event listener to remove button
+                subjectItem.querySelector('.remove-subject-btn').addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    currentSubjects.splice(index, 1);
+                    displaySubjectsList();
+                });
+            });
+            
+            // Add input field for new subject
+            addSubjectInputField();
+        }
+
+        // Add subject input field
+        function addSubjectInputField() {
+            const subjectDiv = document.createElement('div');
+            subjectDiv.className = 'grid grid-cols-2';
+            subjectDiv.style.marginBottom = '15px';
+            subjectDiv.innerHTML = `
+                <div class="form-group">
+                    <label class="form-label">Subject Name</label>
+                    <input type="text" class="form-control subject-name-input" placeholder="e.g., Mathematics">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Score (0-100)</label>
+                    <input type="number" class="form-control subject-score-input" min="0" max="100" placeholder="Enter score">
+                </div>
+            `;
+            subjectsInputContainer.appendChild(subjectDiv);
+        }
+
+        // Add subject button
+        addSubjectBtn.addEventListener('click', () => {
+            addSubjectInputField();
+        });
+
+        // Save grades button
+        saveGradesBtn.addEventListener('click', () => {
+            // Get all subject inputs
+            const nameInputs = document.querySelectorAll('.subject-name-input');
+            const scoreInputs = document.querySelectorAll('.subject-score-input');
+            
+            // Clear current subjects
+            currentSubjects = [];
+            
+            // Add subjects from inputs
+            for (let i = 0; i < nameInputs.length; i++) {
+                const name = nameInputs[i].value.trim();
+                const score = parseInt(scoreInputs[i].value);
+                
+                if (name && !isNaN(score) && score >= 0 && score <= 100) {
+                    currentSubjects.push({ name, score });
+                }
+            }
+            
+            // Save to student record
+            if (!currentStudent.monthlyGrades) {
+                currentStudent.monthlyGrades = {};
+            }
+            currentStudent.monthlyGrades[currentMonth] = [...currentSubjects];
+            
+            alert(`Grades for ${currentMonth} saved successfully!`);
+            displaySubjectsList();
+            renderParentMonthSelector(currentStudent); // Update parent view if needed
+            renderExistingStudents(); // Update students table
+        });
+
+        // Create new student
+        createStudentForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const id = newStudentId.value.trim();
+            const name = newStudentName.value.trim();
+            const grade = newStudentGrade.value;
+            
+            if (!id || !name || !grade) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            const existingStudent = students.find(s => s.id === id);
+            if (existingStudent) {
+                alert('Student ID already exists');
+                return;
+            }
+            
+            const newStudent = {
+                id,
+                name,
+                grade,
+                monthlyGrades: {} // Initialize empty monthly grades
+            };
+            
+            students.push(newStudent);
+            
+            // Reset form
+            newStudentId.value = '';
+            newStudentName.value = '';
+            newStudentGrade.value = '';
+            
+            // Update next student number if using default STU prefix
+            if (id.startsWith('STU')) {
+                const num = parseInt(id.substring(3));
+                if (!isNaN(num) && num >= nextStudentNumber - 1) {
+                    nextStudentNumber = num + 1;
+                }
+            }
+            
+            alert('Student created successfully!');
+            renderExistingStudents();
+        });
+
+        // Generate Student ID
+        function generateStudentId(prefix = 'STU', number = null) {
+            if (number === null) {
+                number = nextStudentNumber++;
+            }
+            return `${prefix}${number.toString().padStart(3, '0')}`;
+        }
+
+        // Initialize generated ID
+        generatedStudentId.textContent = generateStudentId();
+        standaloneGeneratedId.textContent = generateStudentId();
+
+        // Generate new ID button
+        generateIdBtn.addEventListener('click', () => {
+            const newId = generateStudentId(idPrefix, currentIdNumber++);
+            generatedStudentId.textContent = newId;
+        });
+
+        // Copy ID button
+        copyIdBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(generatedStudentId.textContent)
+                .then(() => {
+                    alert('Student ID copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Failed to copy: ', err);
+                    alert('Failed to copy ID. Please select and copy manually.');
+                });
+        });
+
+        // Standalone generate button
+        standaloneGenerateBtn.addEventListener('click', () => {
+            const prefix = customPrefix.value.trim() || 'STU';
+            const number = parseInt(idNumber.value) || 1;
+            const newId = generateStudentId(prefix, number);
+            standaloneGeneratedId.textContent = newId;
+            idNumber.value = number + 1;
+        });
+
+        // Standalone copy button
+        standaloneCopyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(standaloneGeneratedId.textContent)
+                .then(() => {
+                    alert('Student ID copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Failed to copy: ', err);
+                    alert('Failed to copy ID. Please select and copy manually.');
+                });
+        });
+
+        // Apply custom settings
+        applyCustomSettingsBtn.addEventListener('click', () => {
+            idPrefix = customPrefix.value.trim() || 'STU';
+            currentIdNumber = parseInt(idNumber.value) || 1;
+            const newId = generateStudentId(idPrefix, currentIdNumber);
+            standaloneGeneratedId.textContent = newId;
+            generatedStudentId.textContent = newId;
+            alert(`Custom settings applied! Using prefix: ${idPrefix}, starting from: ${currentIdNumber}`);
+        });
+
+        // Sync generated ID with input field
+        generatedStudentId.addEventListener('click', () => {
+            newStudentId.value = generatedStudentId.textContent;
+        });
+
+        // Render existing students table
+        function renderExistingStudents() {
+            studentsTable.innerHTML = '';
+            
+            students.forEach(student => {
+                // Count months with data
+                let monthsWithData = 0;
+                if (student.monthlyGrades) {
+                    months.forEach(month => {
+                        if (student.monthlyGrades[month] && student.monthlyGrades[month].length > 0) {
+                            monthsWithData++;
+                        }
+                    });
+                }
+                
+                // Add grade-specific styling
+                let gradeClass = '';
+                if (student.grade.includes('KG')) {
+                    gradeClass = 'grade-kg';
+                } else if (student.grade.includes('Grade')) {
+                    gradeClass = 'grade-elementary';
+                } else if (student.grade.includes('Prep')) {
+                    gradeClass = 'grade-prep';
+                }
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.id}</td>
+                    <td>${student.name}</td>
+                    <td><span class="${gradeClass}" style="padding: 4px 8px; border-radius: 4px;">${student.grade}</span></td>
+                    <td>${monthsWithData} month(s)</td>
+                    <td>
+                        <button class="btn btn-warning manage-btn" data-id="${student.id}">Manage Grades</button>
+                    </td>
+                `;
+                studentsTable.appendChild(row);
+                
+                // Add event listener to manage button
+                row.querySelector('.manage-btn').addEventListener('click', function() {
+                    const studentId = this.getAttribute('data-id');
+                    const student = students.find(s => s.id === studentId);
+                    if (student) {
+                        // Switch to Manage Grades tab
+                        tabs.forEach(t => t.classList.remove('active'));
+                        document.querySelector('[data-tab="manage-grades"]').classList.add('active');
+                        
+                        tabContents.forEach(content => content.classList.remove('active'));
+                        document.getElementById('manage-grades').classList.add('active');
+                        
+                        // Load the student
+                        manageStudentId.value = studentId;
+                        currentStudent = student;
+                        displayManageStudentInfo(student);
+                        renderSchoolMonthSelector(student);
+                        manageStudentInfo.style.display = 'block';
+                    }
+                });
+            });
+        }
+
+        // Export data
+        exportDataBtn.addEventListener('click', () => {
+            const data = JSON.stringify(students, null, 2);
+            const blob = new Blob([data], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'school-grade-portal-data.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // Import data
+        importDataInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const loadedData = JSON.parse(e.target.result);
+                        if (Array.isArray(loadedData)) {
+                            students = loadedData;
+                            alert('Data imported successfully!');
+                            renderExistingStudents();
+                            
+                            // Update next student number
+                            const maxIdNum = students.reduce((max, student) => {
+                                if (student.id.startsWith('STU')) {
+                                    const num = parseInt(student.id.substring(3));
+                                    return isNaN(num) ? max : Math.max(max, num);
+                                }
+                                return max;
+                            }, 0);
+                            nextStudentNumber = maxIdNum + 1;
+                        } else {
+                            throw new Error('Invalid data format');
+                        }
+                    } catch (error) {
+                        alert('Error loading data: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+                e.target.value = ''; // Reset file input
+            }
+        });
+
+        // Helper function to find elements by text content
+        HTMLElement.prototype.contains = function(text) {
+            return this.textContent === text;
+        };
+
+        // Calculate average score
+        function calculateAverage(subjects) {
+            if (subjects.length === 0) return 0;
+            const total = subjects.reduce((sum, subject) => sum + subject.score, 0);
+            return Math.round(total / subjects.length);
+        }
+
+        // Get letter grade
+        function getGradeLetter(score) {
+            if (score >= 90) return 'A';
+            if (score >= 80) return 'B';
+            if (score >= 70) return 'C';
+            if (score >= 60) return 'D';
+            return 'F';
+        }
+
+        // Get CSS class for grade badge
+        function getGradeBadgeClass(score) {
+            if (score >= 90) return 'badge-success';
+            if (score >= 80) return 'badge-info';
+            if (score >= 70) return 'badge-warning';
+            return 'badge-danger';
+        }
+
+        // Initialize
+        renderExistingStudents();
+    </script>
+</body>
+</html>

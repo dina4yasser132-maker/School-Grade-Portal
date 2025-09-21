@@ -514,7 +514,9 @@
     <header>
         <div class="header-content">
             <div class="logo">
-                <div class="school-logo">LLS</div>
+                <div class="school-logo">
+                    <img src="leaders-language-school-logo.jpg" alt="Leaders Language School Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">
+                </div>
                 <div>
                     <div class="school-name">Leaders Language School</div>
                     <div class="school-subtitle">Empowering Future Leaders</div>
@@ -948,6 +950,12 @@
             { id: 'kha11', name: 'Khalid Owner', role: 'Owner' },
             { id: 'Do22', name: 'Doaa', role: 'Principal' }
         ];
+        
+        // Helper function to find elements by text content
+        HTMLElement.prototype.contains = function(text) {
+            return this.textContent === text;
+        };
+        
         // Tab switching for main navigation
         parentTab.addEventListener('click', () => {
             parentTab.classList.add('active');
@@ -955,6 +963,7 @@
             parentPortal.style.display = 'block';
             schoolPortal.style.display = 'none';
         });
+        
         schoolTab.addEventListener('click', () => {
             if (!isAuthenticated) {
                 // Show login modal
@@ -967,6 +976,7 @@
                 renderExistingStudents();
             }
         });
+        
         // Close login modal
         closeLoginModal.addEventListener('click', () => {
             loginModal.style.display = 'none';
@@ -975,6 +985,7 @@
             usernameInput.value = '';
             passwordInput.value = '';
         });
+        
         // Handle login form submission
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1002,6 +1013,7 @@
                 loginError.style.display = 'block';
             }
         });
+        
         // Tab switching within School Portal
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
@@ -1016,30 +1028,58 @@
                 document.getElementById(tabId).classList.add('active');
             });
         });
+        
         // Search for student in Parent Portal
         searchForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const id = studentIdInput.value.trim();
             const student = students.find(s => s.id === id);
+            
             if (student) {
                 currentStudent = student;
-                displayStudentInfo(student);
-                renderParentMonthSelector(student);
-                renderYearlyOverview(student);
-                errorMessage.style.display = 'none';
+                
+                // Display student info
+                studentName.textContent = student.name;
+                studentGrade.textContent = student.grade;
+                displayStudentId.textContent = student.id;
+                
+                // Show student results section
                 studentResults.style.display = 'block';
+                errorMessage.style.display = 'none';
+                
+                // Render month selector and grades
+                renderParentMonthSelector(student);
+                
+                // Render yearly overview
+                renderYearlyOverview(student);
+                
+                // Display grades for the first month with data (or September)
+                const firstMonthWithData = months.find(month => 
+                    student.monthlyGrades && student.monthlyGrades[month] && student.monthlyGrades[month].length > 0
+                ) || 'September';
+                
+                // Set timeout to ensure DOM is ready
+                setTimeout(() => {
+                    displayMonthlyGrades(student, firstMonthWithData);
+                    
+                    // Set the first month button as active
+                    const monthBtn = document.querySelector(`#parent-month-selector button:contains('${firstMonthWithData}')`);
+                    if (monthBtn) {
+                        // Remove active class from all buttons
+                        document.querySelectorAll('#parent-month-selector .month-btn').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        monthBtn.classList.add('active');
+                    }
+                }, 100);
+                
             } else {
                 errorMessage.textContent = 'Student not found. Please check the ID and try again.';
                 errorMessage.style.display = 'block';
                 studentResults.style.display = 'none';
             }
         });
-        // Display student information in Parent Portal
-        function displayStudentInfo(student) {
-            studentName.textContent = student.name;
-            studentGrade.textContent = student.grade;
-            displayStudentId.textContent = student.id;
-        }
+        
         // Render month selector for Parent Portal
         function renderParentMonthSelector(student) {
             parentMonthSelector.innerHTML = '';
@@ -1065,22 +1105,13 @@
                 });
                 parentMonthSelector.appendChild(monthBtn);
             });
-            // Set first month with data as active, or September if no data
-            const firstMonthWithData = months.find(month => 
-                student.monthlyGrades && student.monthlyGrades[month] && student.monthlyGrades[month].length > 0
-            ) || 'September';
-            const firstBtn = parentMonthSelector.querySelector(`button:contains('${firstMonthWithData}')`) || 
-                           parentMonthSelector.querySelector('button');
-            if (firstBtn) {
-                firstBtn.classList.add('active');
-                currentMonth = firstMonthWithData;
-                displayMonthlyGrades(student, firstMonthWithData);
-            }
         }
+        
         // Display monthly grades
         function displayMonthlyGrades(student, month) {
             const monthlyGrades = student.monthlyGrades && student.monthlyGrades[month] ? student.monthlyGrades[month] : [];
             monthlyGradesContainer.innerHTML = '';
+            
             if (monthlyGrades.length === 0) {
                 monthlyGradesContainer.innerHTML = `
                     <div class="alert alert-danger">
@@ -1089,6 +1120,7 @@
                 `;
                 return;
             }
+            
             const average = calculateAverage(monthlyGrades);
             monthlyGradesContainer.innerHTML = `
                 <div class="student-header" style="margin-bottom: 20px;">
@@ -1116,6 +1148,7 @@
                     </tbody>
                 </table>
             `;
+            
             const monthlySubjectsTable = document.getElementById('monthly-subjects-table');
             monthlyGrades.forEach(subject => {
                 const row = document.createElement('tr');
@@ -1131,6 +1164,7 @@
                 monthlySubjectsTable.appendChild(row);
             });
         }
+        
         // Render yearly overview
         function renderYearlyOverview(student) {
             yearlyOverviewTable.innerHTML = '';
@@ -1196,6 +1230,7 @@
                 yearlyOverviewTable.appendChild(overallRow);
             }
         }
+        
         // Find student in School Portal (Manage Grades)
         findStudentForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1203,7 +1238,6 @@
             const student = students.find(s => s.id === id);
             
             if (student) {
-                // Store current student
                 currentStudent = student;
                 
                 // Display student info
@@ -1225,42 +1259,41 @@
                         monthBtn.classList.add('no-data');
                     }
                     
-                    // Set click event for month button
-                    monthBtn.addEventListener('click', function() {
+                    monthBtn.addEventListener('click', () => {
                         // Remove active class from all buttons
                         document.querySelectorAll('#school-month-selector .month-btn').forEach(btn => {
                             btn.classList.remove('active');
                         });
                         // Add active class to clicked button
-                        this.classList.add('active');
+                        monthBtn.classList.add('active');
                         currentMonth = month;
-                        
-                        // Load grades for selected month
                         loadMonthGrades(student, month);
                     });
                     
                     schoolMonthSelector.appendChild(monthBtn);
                 });
                 
-                // Set September as active by default and load its data
+                // Set September as active by default
                 currentMonth = 'September';
-                const septemberBtn = schoolMonthSelector.querySelector('button:contains("September")');
-                if (septemberBtn) {
-                    // Remove active class from all buttons first
-                    document.querySelectorAll('#school-month-selector .month-btn').forEach(btn => {
-                        btn.classList.remove('active');
-                    });
-                    septemberBtn.classList.add('active');
-                }
                 
-                // Load September grades
-                loadMonthGrades(student, 'September');
+                // Set timeout to ensure DOM is ready
+                setTimeout(() => {
+                    loadMonthGrades(student, 'September');
+                    
+                    // Set September button as active
+                    const septemberBtn = document.querySelector('#school-month-selector button:contains("September")');
+                    if (septemberBtn) {
+                        // Remove active class from all buttons
+                        document.querySelectorAll('#school-month-selector .month-btn').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        septemberBtn.classList.add('active');
+                    }
+                    
+                    // Make sure the grades form container is visible
+                    gradesFormContainer.style.display = 'block';
+                }, 100);
                 
-                // Make sure the grades form container is visible
-                gradesFormContainer.style.display = 'block';
-                
-                // Show success message
-                console.log('Student loaded successfully');
             } else {
                 alert('Student not found. Please check the ID and try again.');
                 manageStudentInfo.style.display = 'none';
@@ -1270,11 +1303,10 @@
         
         // Load month grades for editing
         function loadMonthGrades(student, month) {
-            // Update month display
             selectedMonthSpan.textContent = month;
             saveMonthDisplay.textContent = month;
             
-            // Initialize monthly grades if they don't exist
+            // Initialize or get monthly grades
             if (!student.monthlyGrades) {
                 student.monthlyGrades = {};
             }
@@ -1282,7 +1314,6 @@
                 student.monthlyGrades[month] = [];
             }
             
-            // Load current subjects for this month
             currentSubjects = [...student.monthlyGrades[month]];
             
             // Display subjects in the form
@@ -1374,8 +1405,15 @@
             
             alert(`Grades for ${currentMonth} saved successfully!`);
             displaySubjectsList();
-            renderParentMonthSelector(currentStudent); // Update parent view if needed
-            renderExistingStudents(); // Update students table
+            
+            // Update parent view if needed
+            if (studentResults.style.display === 'block' && displayStudentId.textContent === currentStudent.id) {
+                displayMonthlyGrades(currentStudent, currentMonth);
+                renderYearlyOverview(currentStudent);
+            }
+            
+            // Update students table
+            renderExistingStudents();
         });
         
         // Create new student
@@ -1545,11 +1583,11 @@
                                 monthBtn.classList.add('no-data');
                             }
                             
-                            monthBtn.addEventListener('click', function() {
+                            monthBtn.addEventListener('click', () => {
                                 document.querySelectorAll('#school-month-selector .month-btn').forEach(btn => {
                                     btn.classList.remove('active');
                                 });
-                                this.classList.add('active');
+                                monthBtn.classList.add('active');
                                 currentMonth = month;
                                 loadMonthGrades(student, month);
                             });
@@ -1559,15 +1597,7 @@
                         
                         // Set September as active and load its data
                         currentMonth = 'September';
-                        const septemberBtn = schoolMonthSelector.querySelector('button:contains("September")');
-                        if (septemberBtn) {
-                            document.querySelectorAll('#school-month-selector .month-btn').forEach(btn => {
-                                btn.classList.remove('active');
-                            });
-                            septemberBtn.classList.add('active');
-                            loadMonthGrades(student, 'September');
-                        }
-                        
+                        loadMonthGrades(student, 'September');
                         gradesFormContainer.style.display = 'block';
                     }
                 });
@@ -1618,11 +1648,6 @@
                 e.target.value = ''; // Reset file input
             }
         });
-        
-        // Helper function to find elements by text content
-        HTMLElement.prototype.contains = function(text) {
-            return this.textContent === text;
-        };
         
         // Calculate average score
         function calculateAverage(subjects) {
